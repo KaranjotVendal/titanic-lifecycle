@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Superpowers artifacts — local working docs only, never in git
+/docs/*
+
+# Data & models (raw data gitignored per Kaggle rules; artifacts regenerate)
+data/raw/
+models/
+*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Tooling caches
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+
+# OS
+.DS_Store
