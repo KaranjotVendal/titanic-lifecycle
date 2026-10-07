@@ -25,3 +25,4 @@ mlartifacts/
 
 # OS
 .DS_Store
+mlflow.db
