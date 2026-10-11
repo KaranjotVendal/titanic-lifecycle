@@ -1,0 +1,15 @@
+# keep the build context lean — only what the image needs
+.git
+.github
+.venv
+docs
+notebooks
+data
+tests
+mlruns
+mlflow.db
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+submission.csv
