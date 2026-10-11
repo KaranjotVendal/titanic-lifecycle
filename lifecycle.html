@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Voyage — Titanic ML Lifecycle</title>
+<style>
+  :root {
+    --ground: #f4f8f7;
+    --card: #ffffff;
+    --ink: #14304d;
+    --ink-soft: #4a6379;
+    --teal: #0e7c8a;
+    --teal-soft: #dceef0;
+    --orange: #e36414;
+    --sand: #efe9db;
+    --line: #9db8bd;
+    --shadow: 0 1px 2px rgba(20, 48, 77, .08), 0 8px 24px rgba(20, 48, 77, .07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0d1b28;
+      --card: #15293c;
+      --ink: #e8f0f4;
+      --ink-soft: #9db4c4;
+      --teal: #4fc3cf;
+      --teal-soft: #1c3d4a;
+      --orange: #f0883e;
+      --sand: #1d3049;
+      --line: #33566b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  /* ---------- header ---------- */
+  header { text-align: center; margin-bottom: 56px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--teal); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(34px, 6vw, 48px); font-weight: 700;
+    margin: 0 0 14px; text-wrap: balance; line-height: 1.12;
+  }
+  .lede { color: var(--ink-soft); max-width: 46ch; margin: 0 auto; font-size: 16.5px; }
+  .days {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px;
+  }
+  .days span {
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px;
+    background: var(--teal-soft); color: var(--ink);
+  }
+
+  /* ---------- the route ---------- */
+  .route { position: relative; list-style: none; margin: 0; padding: 0; }
+  .spine {
+    position: absolute; top: 26px; bottom: 26px; left: 50%;
+    border-left: 3px dashed var(--line); transform: translateX(-50%);
+  }
+  .loop {
+    display: none; position: absolute; top: 26px; bottom: 26px; left: -88px;
+    width: 80px; pointer-events: none;
+  }
+  @media (min-width: 940px) { .loop { display: block; } }
+
+  .port { position: relative; margin: 0 0 34px; }
+  .badge {
+    position: relative; z-index: 2;
+    width: 44px; height: 44px; margin: 0 auto 12px;
+    border-radius: 50%; background: var(--teal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: Georgia, serif; font-size: 19px; font-weight: 700;
+    box-shadow: var(--shadow); border: 3px solid var(--ground);
+  }
+  .port.loopback .badge { background: var(--orange); }
+
+  .card {
+    position: relative; z-index: 1;
+    background: var(--card); border-radius: 14px; padding: 22px 24px 18px;
+    box-shadow: var(--shadow); border: 1px solid color-mix(in srgb, var(--line) 35%, transparent);
+  }
+  .day {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--orange); margin: 0 0 6px;
+  }
+  h2 {
+    font-family: Georgia, serif; font-size: 23px; margin: 0 0 8px; line-height: 1.2;
+  }
+  .plain { margin: 0 0 12px; color: var(--ink-soft); font-size: 15.5px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; padding: 0; list-style: none; }
+  .tools li {
+    font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 6px;
+    background: var(--sand); color: var(--ink);
+  }
+
+  details { margin-top: 10px; border-top: 1px solid color-mix(in srgb, var(--line) 35%, transparent); }
+  summary {
+    cursor: pointer; padding: 10px 0 4px; font-size: 13.5px; font-weight: 600;
+    color: var(--teal); list-style: none;
+  }
+  summary::before { content: "+ "; font-family: ui-monospace, monospace; }
+  details[open] summary::before { content: "− "; }
+  summary::-webkit-details-marker { display: none; }
+  summary:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 4px; }
+  details ul { margin: 8px 0 10px; padding-left: 20px; color: var(--ink-soft); font-size: 14.5px; }
+  details li { margin-bottom: 6px; }
+  details b { color: var(--ink); font-weight: 650; }
+
+  /* ---------- epilogue ---------- */
+  .epilogue {
+    margin-top: 40px; text-align: center; padding: 26px 24px;
+    background: var(--sand); border-radius: 14px;
+  }
+  .epilogue h2 { font-size: 21px; }
+  .epilogue p { color: var(--ink-soft); margin: 6px 0 0; font-size: 15px; }
+
+  footer { text-align: center; margin-top: 44px; color: var(--ink-soft); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Titanic &middot; The Full Machine-Learning Lifecycle</p>
+    <h1>The Voyage</h1>
+    <p class="lede">How one Kaggle project sailed all seven ports of a real machine-learning
+      project — from the first look at the data to a model that watches itself —
+      in six days, with nothing but plain words.</p>
+    <div class="days">
+      <span>Mon &middot; look &amp; prep</span>
+      <span>Tue &middot; train</span>
+      <span>Wed &middot; judge &amp; pick</span>
+      <span>Thu &middot; ship</span>
+      <span>Fri &middot; watch</span>
+      <span>Sat &middot; tell the world</span>
+    </div>
+  </header>
+
+  <ol class="route">
+    <div class="spine" aria-hidden="true"></div>
+    <svg class="loop" viewBox="0 0 80 1000" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M60,985 C5,860 5,180 60,30" fill="none" stroke="var(--orange)"
+            stroke-width="2.5" stroke-dasharray="7 7" vector-effect="non-scaling-stroke"
+            marker-end="url(#arrow)"/>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--orange)"/>
+        </marker>
+      </defs>
+      <text x="8" y="505" fill="var(--orange)" font-size="13" font-weight="700"
+            transform="rotate(-90 14 505)" text-anchor="middle">sail again — new data arrives</text>
+    </svg>
+
+    <li class="port">
+      <div class="badge">1</div>
+      <div class="card">
+        <p class="day">Monday &middot; Explore</p>
+        <h2>Look at the data</h2>
+        <p class="plain">We opened 891 passenger records and just&hellip; looked. Ages missing
+          everywhere, and a striking pattern: <b>74% of women survived, vs 19% of men.</b>
+          Even a silly rule — &ldquo;all women live&rdquo; — scores 79%. That became the bar to beat.</p>
+        <ul class="tools"><li>pandas</li><li>seaborn</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>Missing-value audit:</b> 20% of ages, 77% of cabins, 2 embarkation ports — gaps we'd later have to fill.</li>
+            <li><b>Survival by group:</b> survival rates by sex, class, age band and fare — every one a plain &ldquo;chance of surviving, given this group&rdquo;.</li>
+            <li><b>The leak check:</b> made sure no column secretly contains the answer.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port">
+      <div class="badge">2</div>
+      <div class="card">
+        <p class="day">Tuesday morning &middot; Prepare</p>
+        <h2>Clean &amp; prep</h2>
+        <p class="plain">We turned messy text into tidy numbers: titles pulled out of names
+          (Mr, Mrs, Master), flags for travelling-alone, family size and having-a-cabin,
+          gaps filled with the median, text converted to 1s and 0s.</p>
+        <ul class="tools"><li>scikit-learn pipelines</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>Feature engineering</b> from Monday's discoveries — every new column exists because a chart suggested it.</li>
+            <li><b>A reusable prep machine:</b> the same cleaning steps, saved as one object, so test data is treated identically to training data.</li>
+            <li><b>One honest split:</b> 80% to learn from, 20% held back as the exam — keeping the 38% survival rate in both halves.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port">
+      <div class="badge">3</div>
+      <div class="card">
+        <p class="day">Tuesday afternoon &middot; Train</p>
+        <h2>Train four candidates</h2>
+        <p class="plain">Same data, four different learners, every run written down in a lab
+          notebook called MLflow. Plot twist: <b>the simplest model won the first round</b> —
+          the fancy ones memorized the answers instead of learning the pattern.</p>
+        <ul class="tools"><li>4 algorithms</li><li>MLflow</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>A straight-line thinker</b> (logistic regression), <b>a flowchart</b> (decision tree), <b>a crowd of flowcharts</b> (random forest), and <b>a crowd that corrects itself</b> (gradient boosting).</li>
+            <li>The deep flowchart scored 99% on practice but 78% on the exam — classic memorizing.</li>
+            <li>MLflow kept every receipt: settings, scores, and the saved model itself.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port">
+      <div class="badge">4</div>
+      <div class="card">
+        <p class="day">Wednesday morning &middot; Judge</p>
+        <h2>Judge fairly</h2>
+        <p class="plain">One exam is luck; five exams are truth. Re-testing on five different
+          splits <b>flipped the ranking</b> — the self-correcting crowd was best after all (83.6%).
+          And the error table confessed: <b>we miss 3 of every 10 real survivors.</b></p>
+        <ul class="tools"><li>cross-validation</li><li>confusion matrix</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>Five-fold testing:</b> rotate which 20% is the exam, average the five scores — no single lucky split can fool us.</li>
+            <li><b>Accuracy was hiding things.</b> The error table shows two kinds of wrong: calling a survivor dead (21 people) vs calling a dead person a survivor (12).</li>
+            <li>The simple model stayed as the honest baseline — any winner must beat it properly.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port">
+      <div class="badge">5</div>
+      <div class="card">
+        <p class="day">Wednesday afternoon &middot; Freeze</p>
+        <h2>Pick &amp; freeze the winner</h2>
+        <p class="plain">We tried 12 combinations of the winner's settings (how many trees,
+          how deep, how bold), picked the best-scoring set, and froze the result as
+          <b>one file</b> — a &ldquo;champion&rdquo; that loads anywhere and predicts the same way forever.</p>
+        <ul class="tools"><li>grid search</li><li>joblib</li><li>MLflow</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>Tuning bought only +0.7 point</b> — the week's real wins came from looking and prepping, not knob-twisting. An honest lesson most people miss.</li>
+            <li><b>The loop closed:</b> the saved file was reloaded in a fresh process and reproduced its score — it's a real artifact, not a pretty file.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port">
+      <div class="badge">6</div>
+      <div class="card">
+        <p class="day">Thursday &middot; Ship</p>
+        <h2>Serve it like a product</h2>
+        <p class="plain">The notebook became a product: code moved into three small,
+          single-job modules guarded by <b>18 automated tests</b>, given a phone line
+          (a web API), sealed in a <b>Docker box that runs on any machine</b>, and watched
+          by a robot that re-runs every test on every change.</p>
+        <ul class="tools"><li>pytest</li><li>FastAPI</li><li>Docker</li><li>GitHub Actions</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>Three jobs:</b> a prep cook (clean data), a cooking class (train), a waiter (answer questions). One file, one job each.</li>
+            <li><b>Test-driven:</b> tests were written first, and caught real bugs before users could.</li>
+            <li><b>The proof:</b> one command builds a container; a prediction comes back from inside it — same behavior on any computer.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+
+    <li class="port loopback">
+      <div class="badge">7</div>
+      <div class="card">
+        <p class="day">Friday &middot; Watch</p>
+        <h2>Watch &amp; retrain — the loop closes</h2>
+        <p class="plain">A model is a photo of the past; the world moves on. So every batch of
+          new passengers is compared to the training data. When ages and fares drifted,
+          <b>the alarm rang, we retrained, and version 2 was registered next to version 1</b> —
+          then the voyage starts again.</p>
+        <ul class="tools"><li>Evidently</li><li>MLflow registry</li></ul>
+        <details>
+          <summary>What happened here</summary>
+          <ul>
+            <li><b>The smoke alarm, not the fire report:</b> we watch the incoming <i>data</i> because we can't wait for the answers — those arrive too late.</li>
+            <li><b>Statistical tripwires</b> compare each column's old vs new shape and ring when the difference is too big to be luck.</li>
+            <li><b>End-to-end, for real:</b> drift planted &rarr; alarm fired &rarr; retrain ran &rarr; MLflow showed v1 and v2 side by side.</li>
+          </ul>
+        </details>
+      </div>
+    </li>
+  </ol>
+
+  <div class="epilogue">
+    <h2>Port 8 — tell the world</h2>
+    <p>Saturday: the prediction file was validated and submitted to Kaggle for a real
+      leaderboard score, and the whole voyage was written up in a README with a
+      one-page math cheat sheet. The model that keeps watching itself never really
+      finishes sailing. &#8635;</p>
+  </div>
+
+  <footer>
+    One project, six days, seven ports — research &rarr; experimentation &rarr; selection &rarr;
+    production &rarr; deployment &rarr; monitoring &rarr; retraining.
+  </footer>
+
+</div>
+</body>
+</html>
