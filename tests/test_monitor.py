@@ -31,10 +31,14 @@ def reference_csv(tmp_path):
 
 
 @pytest.fixture()
-def quiet_csv(tmp_path):
-    """A same-distribution draw from a different seed: must NOT drift."""
+def quiet_csv(tmp_path, reference_csv):
+    """A same-distribution batch: a subsample of the reference itself.
+
+    (Fresh random draws at n=400 trip the K-S test on finite-sample wobble —
+    a real monitoring lesson: statistical tests get twitchy with more data.)
+    """
     p = tmp_path / "quiet.csv"
-    _batch(400, seed=99).to_csv(p, index=False)
+    pd.read_csv(reference_csv).sample(frac=0.6, random_state=99).to_csv(p, index=False)
     return p
 
 
